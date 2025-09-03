@@ -5,6 +5,7 @@ No restart capabilities are provided yet to resume a partially completed job.
 """
 
 import os, multiprocessing, subprocess, json, sys, shutil
+from ensemble_runs import add_gs_runs_to_q
 
 
 def get_node_count():
