@@ -1,3 +1,9 @@
+"""
+This is a simple orchestrator that will run an ensemble of gray-scott simulations.
+Each instance is run on one full node using all CPUs of the node.
+No restart capabilities are provided yet to resume a partially completed job.
+"""
+
 import os, multiprocessing, subprocess, json, sys, shutil
 
 
@@ -57,6 +63,7 @@ def process_f(q):
             stderr = os.path.join(dirname, "stderr.txt")
             with open(stdout, 'w') as stdout_f, open(stderr, 'w') as stderr_f:
                 subprocess.run(run_cmd, cwd=dirname, stdout=stdout_f, stderr=stderr_f, check=True)
+            print(f"Process {os.getgid()} launched run in {dirname} as {run_cmd}")
         except subprocess.CalledProcessError as e:
             print(f"Run failed with {e.returncode}")
 
@@ -68,23 +75,30 @@ def add_gs_runs_to_q(q):
     :param q: Multiprocessing queue
     :return: None
     """
+    # Get the path to the gray-scott json and the path to the root ensemble directory
     with open(sys.argv[1]) as f:
         input_settings = json.load(f)
         gs_json_src = input_settings['gs_json']
         ensemble_root = input_settings['ensemble_root']
 
+    # Read the gray-scott json file
     with open(gs_json_src) as f:
         gs_json = json.load(f)
 
+    # Iterate over F and k and add them to the queue
+    run_count = 0
     for i in range(10):
-        f = 0.01 + i*0.01
+        f = round(0.01 + i*0.01,3)
         for j in range(10):
-            k = 0.05 + j*0.05
+            k = round(0.05 + j*0.05,3)
 
             gs_json["F"] = f
             gs_json["k"] = k
             dirname = os.path.join(ensemble_root, f"F_{f}-k_{k}")
             q.put({"dirname": dirname, "json": gs_json})
+            run_count += 1
+
+    print(f"Orchestrator created {run_count} runs")
 
 
 def validate_gs(jsonfile):
