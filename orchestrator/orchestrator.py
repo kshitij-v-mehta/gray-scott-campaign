@@ -88,10 +88,18 @@ def add_gs_runs_to_q(q):
 
 
 def validate_gs(jsonfile):
+    """
+    Validates that the input settings configuration file to the orchestrator is a json containing the keys
+    gs_exe, gs_json, adios2_xml, and ensemble_root.
+    :param jsonfile: Input configuration in json format to the orchestrator
+    :return: None
+    """
     required = {"gs_exe", "gs_json", "adios2_xml", "ensemble_root"}
     with open(jsonfile) as f:
         input = json.load(f)
         assert required.issubset(input.keys()), f"Need {sys.argv[1]} to contain {required}"
+
+        assert all(os.path.exists(path) for path in input.values()), f"Input file {jsonfile} does not exist"
 
 
 def main():
