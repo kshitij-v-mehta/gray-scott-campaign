@@ -59,11 +59,12 @@ def process_f(q):
         run_cmd.extend(f"{gs_exe} settings-files.json".split())
 
         try:
+            print(f"Process {os.getgid()} launching {dirname} as {run_cmd}")
+
             stdout = os.path.join(dirname, "stdout.txt")
             stderr = os.path.join(dirname, "stderr.txt")
             with open(stdout, 'w') as stdout_f, open(stderr, 'w') as stderr_f:
                 subprocess.run(run_cmd, cwd=dirname, stdout=stdout_f, stderr=stderr_f, check=True)
-            print(f"Process {os.getgid()} launched run in {dirname} as {run_cmd}")
         except subprocess.CalledProcessError as e:
             print(f"Run failed with {e.returncode}")
 
