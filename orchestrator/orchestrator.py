@@ -8,7 +8,7 @@ import os, multiprocessing, subprocess, json, sys, shutil
 
 
 def get_node_count():
-    return os.environ.get("SLURM_JOB_NUM_NODES", 1)
+    return int(os.environ.get("SLURM_JOB_NUM_NODES", 1))
 
 
 def has_slurm():
