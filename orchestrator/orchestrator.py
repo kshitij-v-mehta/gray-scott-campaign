@@ -12,12 +12,12 @@ def get_node_count():
 
 
 def has_slurm():
-    return any(var.startswith("slurm") for var in os.environ.keys())
+    return any(var.startswith("SLURM") for var in os.environ.keys())
 
 
 def form_mpi_launch_cmd(cpu_count):
     if has_slurm():
-        return f"srun -n {cpu_count} -N 1 ".split()
+        return f"srun -n {cpu_count} -N 1".split()
     else:
         return f"mpirun -np {cpu_count} ".split()
 
