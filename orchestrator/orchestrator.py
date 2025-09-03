@@ -16,10 +16,6 @@ def form_mpi_launch_cmd(cpu_count):
         return f"mpirun -np {cpu_count} ".split()
 
 
-def create_dir(path):
-    os.makedirs(path)
-
-
 def process_f(q):
     """
     Function executed by each process launched by the main orchestrator.
@@ -37,7 +33,7 @@ def process_f(q):
         jsondata = task['json']
 
         # Create ensemble run directory
-        create_dir(dirname)
+        os.makedirs(dirname)
 
         # Place json in run directory
         with open(os.path.join(dirname, "settings-files.json"), 'w') as f:
@@ -57,7 +53,10 @@ def process_f(q):
         run_cmd.extend(f"{gs_exe} settings-files.json".split())
 
         try:
-            subprocess.run(run_cmd)
+            stdout = os.path.join(dirname, "stdout.txt")
+            stderr = os.path.join(dirname, "stderr.txt")
+            with open(stdout, 'w') as stdout_f, open(stderr, 'w') as stderr_f:
+                subprocess.run(run_cmd, cwd=dirname, stdout=stdout_f, stderr=stderr_f, check=True)
         except subprocess.CalledProcessError as e:
             print(f"Run failed with {e.returncode}")
 
@@ -70,6 +69,11 @@ def add_gs_runs_to_q(q):
     :return: None
     """
     with open(sys.argv[1]) as f:
+        input_settings = json.load(f)
+        gs_json_src = input_settings['gs_json']
+        ensemble_root = input_settings['ensemble_root']
+
+    with open(gs_json_src) as f:
         gs_json = json.load(f)
 
     for i in range(10):
@@ -79,12 +83,12 @@ def add_gs_runs_to_q(q):
 
             gs_json["F"] = f
             gs_json["k"] = k
-            dirname = f"F_{f}-k_{k}"
+            dirname = os.path.join(ensemble_root, f"F_{f}-k_{k}")
             q.put({"dirname": dirname, "json": gs_json})
 
 
 def validate_gs(jsonfile):
-    required = {"gs_exe", "gs_json", "adios2_xml"}
+    required = {"gs_exe", "gs_json", "adios2_xml", "ensemble_root"}
     with open(jsonfile) as f:
         input = json.load(f)
         assert required.issubset(input.keys()), f"Need {sys.argv[1]} to contain {required}"
