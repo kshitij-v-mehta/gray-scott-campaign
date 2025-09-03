@@ -95,6 +95,9 @@ def add_gs_runs_to_q(q):
             gs_json["F"] = f
             gs_json["k"] = k
             dirname = os.path.join(ensemble_root, f"F_{f}-k_{k}")
+            if os.path.exists(dirname):
+                print(f"Skipping {dirname} as it already exists")
+                continue
             q.put({"dirname": dirname, "json": gs_json})
             run_count += 1
 
